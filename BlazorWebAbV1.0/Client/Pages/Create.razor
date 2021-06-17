@@ -1,0 +1,19 @@
+﻿@page "/create"
+@inject HttpClient Http
+@inject NavigationManager uriHelper
+@using BlazorWebAbV1._0.Shared
+
+<h3>Create</h3>
+
+<FilmForm ButtonText="Add Film" FilmProcess="@newFilm"
+          OnValidSubmit="@AddFilm" />
+
+
+@code {
+    Film newFilm = new Film();
+    async Task AddFilm()
+    {
+        await Http.PostAsJsonAsync("/Films/ApiAddFilm", newFilm);
+        uriHelper.NavigateTo("FilmData");
+    }
+}

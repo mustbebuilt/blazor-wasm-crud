@@ -1,0 +1,26 @@
+﻿<div>
+    <h2>Special Offers</h2>
+    <p>Chained Binding</p>
+    <div>
+        <p>Value changed in component</p>
+        <input type="text" @bind="myBindValue">
+        <p>Bind Value: @myBindValue</p>
+        <button @onclick="UpdateBindValue">Update Value from Child</button>
+    </div>
+</div>
+
+@code{
+
+    [Parameter]
+    public string myBindValue { get; set; }
+
+    [Parameter]
+    public EventCallback<String> myBindValueChanged { get; set; }
+
+    private async Task UpdateBindValue()
+    {
+        await myBindValueChanged.InvokeAsync(myBindValue);
+    }
+
+
+}

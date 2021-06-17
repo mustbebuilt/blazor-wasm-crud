@@ -1,0 +1,41 @@
+﻿@page "/databindingdemo"
+
+<h1>Data Binding Demo</h1>
+
+<div>
+    <p>Value change when 'blurred' (default)</p>
+    <input type="text" @bind="myBindValue">
+</div>
+
+
+<div>
+    <p>Value change on input through @@bind:event</p>
+    <input type="text" @bind="myBindValue" @bind:event="oninput" />
+</div>
+
+
+<p>Bind Value: @myBindValue</p>
+
+<p>
+    <button @onclick="clear">Clear</button>
+</p>
+
+<Advert @bind-myBindValue="@myBindValue" @bind-myBindValue:event="myBindValueChanged">
+</Advert>
+
+
+@code {
+    public string myBindValue { get; set; }
+
+    protected override void OnInitialized()
+    {
+        myBindValue = "hi";
+    }
+
+    public void clear()
+    {
+        myBindValue = "";
+    }
+
+
+}

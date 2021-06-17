@@ -1,0 +1,110 @@
+﻿@page "/filmdata"
+@using BlazorWebAbV1._0.Shared
+@inject HttpClient Http
+
+
+<section class="position-sticky" style="top:56px;background-color:#fff;padding-bottom:40px;">
+    <h1>Film Data</h1>
+
+    <p>This component demonstrates fetching data from the server.</p>
+
+
+
+    @if (IndieFilm != null)
+    {
+        <div class="d-flex flex-row">
+            <div class="p-2">
+                <h3>@IndieFilm.FilmTitle</h3>
+                <p>@IndieFilm.FilmDescription</p>
+            </div>
+            <div class="p-2">    <img src="/images/@IndieFilm.FilmImage" /></div>
+        </div>
+
+
+
+    }
+
+    <div class="form-group">
+        <a class="btn btn-success" href="/Create"><i class="oi oi-plus"></i> Add Film</a>
+    </div>
+
+</section>
+
+
+
+@if (movies == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Film Name</th>
+                <th>Certificate</th>
+                <th>Price</th>
+                <th>Release Date</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var movie in movies)
+            {
+                <tr>
+                    <td>@movie.FilmTitle</td>
+                    <td>@movie.FilmCertificate</td>
+                    <td>&pound;@movie.FilmPrice.ToString("0.00")</td>
+                    <td>@movie.FilmReleaseDate.ToShortDateString()</td>
+                    <td><button @onclick="() => GetFilmDetails(movie.FilmID)" class="btn btn-primary">More</button></td>
+                    <td>
+                        <a class="btn btn-success" href="/EditFilm/@movie.FilmID">Edit</a>
+                        <button @onclick="() => DeleteFilm(movie.FilmID)" class="btn btn-danger">Remove</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private Film[] movies;
+
+    Film IndieFilm { get; set; }
+
+    protected override async Task OnInitializedAsync() =>
+        await Refresh();
+
+    protected async Task Refresh()
+    {
+        movies = await Http.GetFromJsonAsync<Film[]>("films/apiData");
+        StateHasChanged();
+    }
+
+
+    public async Task GetFilmDetails(int FilmID)
+    {
+        IndieFilm = await Http.GetFromJsonAsync<Film>($"films/ApiFilmDetails/{FilmID}");
+    }
+
+    private bool IsShow { get; set; } = false;
+    private void Show()
+    {
+        IsShow = !IsShow;
+    }
+
+
+
+    protected async Task DeleteFilm(int FilmID)
+    {
+        await Http.DeleteAsync($"{"/Films/ApiDeleteFilm"}/{FilmID}");
+        await Refresh();
+    }
+
+    //protected async Task GoAddFilm()
+    //{
+    //    await Http.PostAsJsonAsync("/Films/ApiAddFilm", newFilm);
+    //}
+
+
+}
