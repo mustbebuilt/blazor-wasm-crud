@@ -1,19 +1,95 @@
 ﻿@page "/create"
 @inject HttpClient Http
 @inject NavigationManager uriHelper
-@using BlazorWebAbV1._0.Shared
+@using System.IO
+@using BlazorWebAbV1.Shared
 
 <h3>Create</h3>
 
-<FilmForm ButtonText="Add Film" FilmProcess="@newFilm"
-          OnValidSubmit="@AddFilm" />
+<EditForm Model="@FilmProcess" OnValidSubmit="@AddFilm">
+    <div>
+        <label for="FilmTitle">Film Title</label>
+        <InputText @bind-Value=FilmProcess.FilmTitle class="form-control" id="FilmTitle" />
+
+    </div>
+
+    <div>
+        <label for="FilmCertificate">Film Certificate</label>
+        <InputText @bind-Value=FilmProcess.FilmCertificate class="form-control" id="FilmCertificate" />
+    </div>
+
+    <div>
+        <label for="FilmDescription">Film Description</label>
+        <InputTextArea @bind-Value=FilmProcess.FilmDescription class="form-control" id="FilmDescription" />
+
+    </div>
+
+    <div>
+        <label for="FilmImage">Film Image</label>
+        <InputFile OnChange="@OnInputFileChange" id="FileContent" />
+
+
+    </div>
+
+    <div>
+        <label for="FilmPrice">Film Price</label>
+        <InputNumber @bind-Value=FilmProcess.FilmPrice class="form-control" id="FilmPrice" />
+    </div>
+
+    <div>
+        <label for="FilmRating">Film Rating</label>
+        <InputNumber @bind-Value=FilmProcess.FilmRating class="form-control" id="FilmRating" />
+    </div>
+
+    <div>
+        <label for="FilmReleaseDate">Release Date</label>
+        <InputDate @bind-Value=FilmProcess.FilmReleaseDate class="form-control" id="FilmReleaseDate" />
+    </div>
+
+    <div>
+        <input type="submit" value="@ButtonText" class="add" />
+    </div>
+
+</EditForm>
 
 
 @code {
-    Film newFilm = new Film();
+
+    FilmUpdateForm FilmProcess = new FilmUpdateForm();
+    public string ButtonText { get; set; } = "Add Film";
+    public IReadOnlyList<IBrowserFile> selectedFiles;
+    public IBrowserFile singleFile;
+
+    private void OnInputFileChange
+(InputFileChangeEventArgs ev)
+    {
+        //selectedFiles = ev.GetMultipleFiles();
+        singleFile = ev.File;
+        this.StateHasChanged();
+    }
+
+
     async Task AddFilm()
     {
-        await Http.PostAsJsonAsync("/Films/ApiAddFilm", newFilm);
+        // foreach (var file in selectedFiles)
+        // {
+        Stream stream = singleFile.OpenReadStream();
+        MemoryStream ms = new MemoryStream();
+        await stream.CopyToAsync(ms);
+        stream.Close();
+
+        FilmProcess.FileName = singleFile.Name;
+        FilmProcess.FileContent = ms.ToArray();
+        ms.Close();
+
+
+        //  }
+        HttpResponseMessage response = await Http.PostAsJsonAsync<FilmUpdateForm>
+("/Films/ApiAddFilm", FilmProcess);
+        if (response.IsSuccessStatusCode)
+        {
+            Console.WriteLine("Success");
+        }
         uriHelper.NavigateTo("FilmData");
     }
 }

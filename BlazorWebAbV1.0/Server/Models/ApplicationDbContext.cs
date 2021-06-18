@@ -1,5 +1,6 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore;
+using BlazorWebAbV1.Shared;
 
 namespace BlazorWebAbV1.Server.Models
 {

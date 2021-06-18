@@ -2,7 +2,7 @@
 @inject HttpClient Http
 @inject NavigationManager uriHelper
 @inject IJSRuntime js
-@using BlazorWebAbV1._0.Shared
+@using BlazorWebAbV1.Shared
 
 
 <h3>Edit Film</h3>
@@ -12,11 +12,11 @@
 
 @code {
     [Parameter] public int FilmID { get; set; }
-    Film filmToEdit = new Film();
+    FilmUpdateForm filmToEdit = new FilmUpdateForm();
 
     protected async override Task OnParametersSetAsync()
     {
-        filmToEdit = await Http.GetFromJsonAsync<Film>($"Films/ApiFilmDetails/{FilmID}");
+        filmToEdit = await Http.GetFromJsonAsync<FilmUpdateForm>($"Films/ApiFilmDetails/{FilmID}");
     }
 
     async Task DoEditFilm()

@@ -5,9 +5,10 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using BlazorWebAbV1.Server.Models;
 using Microsoft.AspNetCore.Hosting;
 using System.IO;
+using BlazorWebAbV1.Shared;
+using BlazorWebAbV1.Server.Models;
 
 namespace BlazorWebAbV1.Server.Controllers
 {
@@ -18,10 +19,13 @@ namespace BlazorWebAbV1.Server.Controllers
 
         private readonly IWebHostEnvironment _webHostEnvironment;
 
-        public FilmsController(ApplicationDbContext context, IWebHostEnvironment hostEnvironment)
+        private readonly IWebHostEnvironment env;
+
+        public FilmsController(ApplicationDbContext context, IWebHostEnvironment hostEnvironment, IWebHostEnvironment env)
         {
             _context = context;
             _webHostEnvironment = hostEnvironment;
+            this.env = env;
         }
 
         public IActionResult AllMovies()
@@ -52,37 +56,34 @@ namespace BlazorWebAbV1.Server.Controllers
         }
 
         [HttpPost]
-        public IActionResult ApiAddFilm([FromBody] Film model)
+        public IActionResult ApiAddFilm([FromBody] FilmUpdateForm model)
         {
-
+    
             if (ModelState.IsValid)
             {
-                ////string uniqueFileName = UploadedFile(model);
-                //var tuple = UploadedFile(model);
-                //string uniqueFileName = tuple.Item1;
-                //string fileExt = tuple.Item2;
-                //long fileSize = tuple.Item3;
-                //string[] permittedExtensions = { ".gif", ".jpg", ".jpeg", ".png" };
+                var tuple = UploadedFile(model);
+                string uniqueFileName = tuple.Item1;
+                string fileExt = tuple.Item2;
+                long fileSize = tuple.Item3;
+                string[] permittedExtensions = { ".gif", ".jpg", ".jpeg", ".png" };
 
-                //// 5 MB
-                //if (fileSize > 5000000)
-                //{
-                //    ViewBag.msg = "Image Too Big: " + fileSize.ToString();
-
-                //    return View();
-                //}
-                //if (!permittedExtensions.Contains(fileExt))
-                //{
-                //    ViewBag.msg = "Wrong File type " + fileExt;
-                //    return View();
-                //}
+                // 5 MB
+                // 512000
+                if (fileSize > 512000)
+                {
+                    return Ok("Bad Image Size");
+                }
+                if (!permittedExtensions.Contains(fileExt))
+                {
+                    return Ok("Bad Image type of  " + fileExt);
+                }
 
                 Film newFilm = new Film
                 {
                     FilmTitle = model.FilmTitle,
                     FilmCertificate = model.FilmCertificate,
                     FilmDescription = model.FilmDescription,
-                    FilmImage = model.FilmImage,  // uniqueFileName, // 
+                    FilmImage = uniqueFileName,
                     FilmPrice = model.FilmPrice,
                     FilmRating = model.FilmRating,
                     FilmReleaseDate = model.FilmReleaseDate,
@@ -132,29 +133,31 @@ namespace BlazorWebAbV1.Server.Controllers
             return Ok("Done");
         }
 
-        private Tuple<string, string, long> UploadedFile(FilmUpdateForm model)
+        private Tuple<string, string, long> UploadedFile(FilmUpdateForm uploadedFile)
         {
             string uniqueFileName = null;
             string fileExtension = null;
             long fileSize = 0;
 
-            if (model.FilmImage != null)
+            if (uploadedFile.FileContent != null)
             {
-                string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images");
-                //uniqueFileName = Guid.NewGuid().ToString() + "_" + model.FilmImage.FileName;
-                fileExtension = Path.GetExtension(model.FilmImage.FileName);
+                fileExtension = Path.GetExtension(uploadedFile.FileName);
                 fileExtension = fileExtension.ToLowerInvariant();
                 uniqueFileName = Guid.NewGuid().ToString() + fileExtension;
-                //uniqueFileName = "test";
-                string filePath = Path.Combine(uploadsFolder, uniqueFileName);
-                using (var fileStream = new FileStream(filePath, FileMode.Create))
-                {
-                    model.FilmImage.CopyTo(fileStream);
-                    fileSize = fileStream.Length;
-                }
+                var path = $"{env.WebRootPath}\\{uniqueFileName}";
+                var fs = System.IO.File.Create(path);
+                fs.Write(uploadedFile.FileContent, 0,
+        uploadedFile.FileContent.Length);
+                fs.Close();
+                string targetPath = $"{env.WebRootPath}//images";
+                string destFile = System.IO.Path.Combine(targetPath, uniqueFileName);
+                System.IO.File.Copy(path, destFile, true);
+
             }
             return new Tuple<string, string, long>(uniqueFileName, fileExtension, fileSize);
         }
+
+
 
 
     }
