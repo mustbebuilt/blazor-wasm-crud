@@ -1,8 +1,6 @@
 ﻿using System;
-using Microsoft.AspNetCore.Http;
 
-
-namespace BlazorWebAbV1.Server.Models
+namespace BlazorWebAbV1.Shared
 {
     public class FilmUpdateForm
 
@@ -13,8 +11,9 @@ namespace BlazorWebAbV1.Server.Models
 
         public string FilmDescription { get; set; }
 
-        //public string FilmImage { get; set; }
-        public IFormFile FilmImage { get; set; }
+        public string FileName { get; set; }
+
+        public byte[] FileContent { get; set; }
 
         public decimal FilmPrice { get; set; }
 
