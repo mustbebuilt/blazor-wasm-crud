@@ -1,29 +1,122 @@
-﻿@page "/EditFilm/{FilmID:int}"
+﻿@page "/editfilm/{FilmID:int}"
 @inject HttpClient Http
 @inject NavigationManager uriHelper
-@inject IJSRuntime js
+@using System.IO
 @using BlazorWebAbV1.Shared
-
 
 <h3>Edit Film</h3>
 
-<FilmForm ButtonText="Update" FilmProcess="filmToEdit"
-          OnValidSubmit="@DoEditFilm" />
+<EditForm Model="@FilmProcess" OnValidSubmit="@CallEditFilm">
+
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <input type="hidden" name="FilmID" @bind-value=@FilmID>
+    <div>
+        <label for="FilmTitle">Film Title</label>
+        <InputText @bind-Value=FilmProcess.FilmTitle class="form-control" id="FilmTitle" />
+        <ValidationMessage For="@(() => FilmProcess.FilmTitle)" />
+
+    </div>
+
+    <div>
+        <label for="FilmCertificate">Film Certificate</label>
+        <InputText @bind-Value=FilmProcess.FilmCertificate class="form-control" id="FilmCertificate" />
+        <ValidationMessage For="@(() => FilmProcess.FilmCertificate)" />
+    </div>
+
+    <div>
+        <label for="FilmDescription">Film Description</label>
+        <InputTextArea @bind-Value=FilmProcess.FilmDescription class="form-control" id="FilmDescription" />
+        <ValidationMessage For="@(() => FilmProcess.FilmDescription)" />
+
+    </div>
+
+    <div>
+        <label for="FilmImage">Film Image</label>
+        <InputFile OnChange="@OnInputFileChange" id="FileContent" />
+
+
+    </div>
+
+    <div>
+        <label for="FilmPrice">Film Price</label>
+        <InputNumber @bind-Value=FilmProcess.FilmPrice class="form-control" id="FilmPrice" />
+    </div>
+
+    <div>
+        <label for="FilmRating">Film Rating</label>
+        <InputNumber @bind-Value=FilmProcess.FilmRating class="form-control" id="FilmRating" />
+    </div>
+
+    <div>
+        <label for="FilmReleaseDate">Release Date</label>
+        <InputDate @bind-Value=FilmProcess.FilmReleaseDate class="form-control" id="FilmReleaseDate" />
+    </div>
+
+    <div>
+        <input type="submit" value="Edit" class="add" />
+    </div>
+
+</EditForm>
+
 
 @code {
-    [Parameter] public int FilmID { get; set; }
+
+    [Parameter]
+    public int FilmID { get; set; }
+    FilmUpdateForm FilmProcess = new FilmUpdateForm();
+    public IReadOnlyList<IBrowserFile> selectedFiles;
+    public IBrowserFile singleFile;
+    public Boolean ImageUploadRequired = false;
+
     FilmUpdateForm filmToEdit = new FilmUpdateForm();
 
     protected async override Task OnParametersSetAsync()
     {
-        filmToEdit = await Http.GetFromJsonAsync<FilmUpdateForm>($"Films/ApiFilmDetails/{FilmID}");
+        FilmProcess = await Http.GetFromJsonAsync<FilmUpdateForm>($"Films/ApiFilmDetails/{FilmID}");
     }
 
-    async Task DoEditFilm()
-    {
-        await Http.PutAsJsonAsync("/Films/ApiEditFilm", filmToEdit);
-        await js.InvokeVoidAsync("alert", $"Updated Successfully!");
-        uriHelper.NavigateTo("FilmData");
 
+    private void OnInputFileChange
+(InputFileChangeEventArgs ev)
+    {
+        //selectedFiles = ev.GetMultipleFiles();
+        singleFile = ev.File;
+        ImageUploadRequired = true;
+        this.StateHasChanged();
+    }
+
+
+    async Task CallEditFilm()
+    {
+        // foreach (var file in selectedFiles)
+        // {
+        HttpResponseMessage response;
+        FilmProcess.FilmID = FilmID;
+        if (ImageUploadRequired)
+        {
+            Stream stream = singleFile.OpenReadStream();
+            MemoryStream ms = new MemoryStream();
+            await stream.CopyToAsync(ms);
+            stream.Close();
+            FilmProcess.FileName = singleFile.Name;
+            FilmProcess.FileContent = ms.ToArray();
+            ms.Close();
+            response = await Http.PutAsJsonAsync<FilmUpdateForm>
+("/Films/ApiEditFilmWithFile", FilmProcess);
+        }
+        else
+        {
+            response = await Http.PutAsJsonAsync("/Films/ApiEditFilm/", FilmProcess);
+        }
+
+        //  }
+
+        if (response.IsSuccessStatusCode)
+        {
+            Console.WriteLine("Success");
+        }
+        uriHelper.NavigateTo("FilmData");
     }
 }

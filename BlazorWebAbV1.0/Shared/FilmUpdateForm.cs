@@ -1,14 +1,20 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace BlazorWebAbV1.Shared
 {
     public class FilmUpdateForm
 
     {
+        public int FilmID { get; set; }
+
+        [Required (ErrorMessage = "Please provide a film name")]
         public string FilmTitle { get; set; }
 
+        [Required (ErrorMessage = "Please provide a film certificate")]
         public string FilmCertificate { get; set; }
 
+        [Required (ErrorMessage = "Please provide a film description")]
         public string FilmDescription { get; set; }
 
         public string FileName { get; set; }

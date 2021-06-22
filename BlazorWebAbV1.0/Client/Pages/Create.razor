@@ -7,21 +7,27 @@
 <h3>Create</h3>
 
 <EditForm Model="@FilmProcess" OnValidSubmit="@AddFilm">
+
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
     <div>
         <label for="FilmTitle">Film Title</label>
         <InputText @bind-Value=FilmProcess.FilmTitle class="form-control" id="FilmTitle" />
+        <ValidationMessage For="@(() => FilmProcess.FilmTitle)" />
 
     </div>
 
     <div>
         <label for="FilmCertificate">Film Certificate</label>
         <InputText @bind-Value=FilmProcess.FilmCertificate class="form-control" id="FilmCertificate" />
+        <ValidationMessage For="@(() => FilmProcess.FilmCertificate)" />
     </div>
 
     <div>
         <label for="FilmDescription">Film Description</label>
         <InputTextArea @bind-Value=FilmProcess.FilmDescription class="form-control" id="FilmDescription" />
-
+        <ValidationMessage For="@(() => FilmProcess.FilmDescription)" />
     </div>
 
     <div>
@@ -55,37 +61,45 @@
 
 @code {
 
-    FilmUpdateForm FilmProcess = new FilmUpdateForm();
+        FilmUpdateForm FilmProcess = new FilmUpdateForm();
     public string ButtonText { get; set; } = "Add Film";
     public IReadOnlyList<IBrowserFile> selectedFiles;
     public IBrowserFile singleFile;
+    public Boolean ImageUploadRequired = false;
 
     private void OnInputFileChange
 (InputFileChangeEventArgs ev)
     {
         //selectedFiles = ev.GetMultipleFiles();
         singleFile = ev.File;
+        ImageUploadRequired = true;
         this.StateHasChanged();
     }
 
 
     async Task AddFilm()
     {
-        // foreach (var file in selectedFiles)
-        // {
-        Stream stream = singleFile.OpenReadStream();
-        MemoryStream ms = new MemoryStream();
-        await stream.CopyToAsync(ms);
-        stream.Close();
+        HttpResponseMessage response;
+        if (ImageUploadRequired)
+        {
+            Stream stream = singleFile.OpenReadStream();
+            MemoryStream ms = new MemoryStream();
+            await stream.CopyToAsync(ms);
+            stream.Close();
 
-        FilmProcess.FileName = singleFile.Name;
-        FilmProcess.FileContent = ms.ToArray();
-        ms.Close();
+            FilmProcess.FileName = singleFile.Name;
+            FilmProcess.FileContent = ms.ToArray();
+            ms.Close();
 
 
-        //  }
-        HttpResponseMessage response = await Http.PostAsJsonAsync<FilmUpdateForm>
-("/Films/ApiAddFilm", FilmProcess);
+            //  }
+            response = await Http.PostAsJsonAsync<FilmUpdateForm>
+    ("/Films/ApiAddFilmWithFile", FilmProcess);
+        }
+        else
+        {
+            response = await Http.PostAsJsonAsync<FilmUpdateForm>("/Films/ApiAddFilm/", FilmProcess);
+        }
         if (response.IsSuccessStatusCode)
         {
             Console.WriteLine("Success");

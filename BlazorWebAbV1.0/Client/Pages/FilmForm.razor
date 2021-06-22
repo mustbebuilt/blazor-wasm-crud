@@ -1,6 +1,7 @@
 ﻿@using BlazorWebAbV1.Shared
 
 <EditForm Model="@FilmProcess" OnValidSubmit="@OnValidSubmit" >
+    <input type="hidden" name="FilmID" @bind-value=@FilmID>
         <div>
             <label for="FilmTitle">Film Title</label>
             <InputText @bind-Value=FilmProcess.FilmTitle class="form-control" id="FilmTitle" />
@@ -47,6 +48,7 @@
 </EditForm>
 
 @code {
+    [Parameter] public int FilmID { get; set; }
     [Parameter] public FilmUpdateForm FilmProcess { get; set; }
     [Parameter] public string ButtonText { get; set; } = "Add Film";
     [Parameter] public EventCallback OnValidSubmit { get; set; }

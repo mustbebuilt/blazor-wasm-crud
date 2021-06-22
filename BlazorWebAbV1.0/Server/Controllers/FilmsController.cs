@@ -56,7 +56,7 @@ namespace BlazorWebAbV1.Server.Controllers
         }
 
         [HttpPost]
-        public IActionResult ApiAddFilm([FromBody] FilmUpdateForm model)
+        public IActionResult ApiAddFilmWithFile([FromBody] FilmUpdateForm model)
         {
     
             if (ModelState.IsValid)
@@ -98,6 +98,72 @@ namespace BlazorWebAbV1.Server.Controllers
         }
 
         [HttpPut]
+        public IActionResult ApiEditFilmWithFile([FromBody] FilmUpdateForm model)
+        {
+
+            if (ModelState.IsValid)
+            {
+                var tuple = UploadedFile(model);
+                string uniqueFileName = tuple.Item1;
+                string fileExt = tuple.Item2;
+                long fileSize = tuple.Item3;
+                string[] permittedExtensions = { ".gif", ".jpg", ".jpeg", ".png" };
+
+                // 5 MB
+                // 512000
+                if (fileSize > 512000)
+                {
+                    return Ok("Bad Image Size");
+                }
+                if (!permittedExtensions.Contains(fileExt))
+                {
+                    return Ok("Bad Image type of  " + fileExt);
+                }
+
+                Film editFilm = new Film
+                {
+                    FilmID = model.FilmID,
+                    FilmTitle = model.FilmTitle,
+                    FilmCertificate = model.FilmCertificate,
+                    FilmDescription = model.FilmDescription,
+                    FilmImage = uniqueFileName,
+                    FilmPrice = model.FilmPrice,
+                    FilmRating = model.FilmRating,
+                    FilmReleaseDate = model.FilmReleaseDate,
+                };
+                _context.Update(editFilm);
+                _context.SaveChanges();
+                return Ok("Good");
+            }
+
+            return Ok("Bad");
+
+        }
+
+        [HttpPost]
+        public IActionResult ApiAddFilm([FromBody] Film model)
+        {
+            if (ModelState.IsValid)
+            {
+                Film newFilm = new Film
+            {
+                FilmTitle = model.FilmTitle,
+                FilmCertificate = model.FilmCertificate,
+                FilmDescription = model.FilmDescription,
+                FilmImage = "none",
+                FilmPrice = model.FilmPrice,
+                FilmRating = model.FilmRating,
+                FilmReleaseDate = model.FilmReleaseDate,
+            };
+            _context.Add(newFilm);
+            _context.SaveChanges();
+            return Ok("Good");
+            }
+
+            return Ok("Bad");
+        }
+
+        [HttpPut]
         public IActionResult ApiEditFilm([FromBody] Film model)
         {
 
@@ -106,6 +172,7 @@ namespace BlazorWebAbV1.Server.Controllers
 
                 Film editFilm = new Film
                 {
+                    FilmID = model.FilmID,
                     FilmTitle = model.FilmTitle,
                     FilmCertificate = model.FilmCertificate,
                     FilmDescription = model.FilmDescription,
